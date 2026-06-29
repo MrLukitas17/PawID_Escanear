@@ -2,14 +2,19 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PawID - Ficha de Mascota</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.js"></script>
-
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: sans-serif; background: #F9F9F9; display: flex; justify-content: center; padding: 20px; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background: #F9F9F9; 
+    display: flex; 
+    justify-content: center; 
+    align-items: flex-start; 
+    min-height: 100vh; 
+    padding: 20px; 
+  }
   
   .card {
     background: #FFFFFF;
@@ -17,18 +22,59 @@
     padding: 24px;
     width: 100%;
     max-width: 400px;
-    border: 3px solid #007777;
+    /* Borde verde solicitado */
+    border: 3px solid #007777; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   }
 
-  .header { background: #007777; color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; text-align: center; }
-  .section-title { color: #007777; font-weight: 800; font-size: 13px; margin: 20px 0 12px 0; border-bottom: 2px solid #007777; padding-bottom: 5px; text-transform: uppercase; }
-  .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F0F0F0; font-size: 14px; }
+  .header { 
+    background: #007777; 
+    color: white; 
+    padding: 20px; 
+    border-radius: 12px; 
+    margin-bottom: 24px; 
+    text-align: center; 
+  }
   
-  .btn-container { display: flex; gap: 10px; margin-top: 25px; }
-  .btn { flex: 1; border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; color: white; }
-  .btn-pdf { background: #E63946; }
-  .btn-word { background: #2A9D8F; }
+  .header h2 { font-size: 24px; margin-bottom: 5px; }
+  .header p { font-size: 14px; opacity: 0.9; }
+  
+  .section-title { 
+    color: #007777; 
+    font-weight: 800; 
+    font-size: 13px;
+    margin-bottom: 12px; 
+    margin-top: 20px;
+    border-bottom: 2px solid #007777; 
+    padding-bottom: 5px; 
+    text-transform: uppercase;
+  }
+  
+  .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F0F0F0; font-size: 14px; }
+  .row span { color: #666; }
+  .row b { color: #333; }
+  
+  .btn {
+    width: 100%;
+    background: #007777; 
+    color: white;
+    border: none; 
+    border-radius: 10px;
+    padding: 14px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: 25px;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  .btn:hover { background: #005a5a; }
+
+  /* Estilos para impresión */
+  @media print {
+    body { background: white; padding: 0; }
+    .btn { display: none; }
+    .card { box-shadow: none; border: 3px solid #007777; }
+  }
 </style>
 </head>
 <body>
@@ -47,36 +93,28 @@
     telefono: params.get('t') || 'N/A',
   };
 
-  const cardHtml = `
-    <div class="card" id="card-to-export">
-      <div class="header"><h2>PawID</h2><p>Ficha de Mascota</p></div>
-      <div class="section-title">DATOS DE LA MASCOTA</div>
+  const content = document.getElementById('content');
+
+  content.innerHTML = `
+    <div class="card">
+      <div class="header">
+        <h2>PawID</h2>
+        <p>Ficha de Mascota</p>
+      </div>
+      
+      <div class="section-title">Datos de la Mascota</div>
       <div class="row"><span>Nombre:</span><b>${pet.nombre}</b></div>
       <div class="row"><span>Especie:</span><b>${pet.especie}</b></div>
       <div class="row"><span>Raza:</span><b>${pet.raza}</b></div>
       <div class="row"><span>Nacimiento:</span><b>${pet.nacimiento}</b></div>
       <div class="row"><span>Edad:</span><b>${pet.edad}</b></div>
-      <div class="section-title">DATOS DEL DUEÑO</div>
+      
+      <div class="section-title">Datos del Dueño</div>
       <div class="row"><span>Nombre:</span><b>${pet.dueno}</b></div>
       <div class="row"><span>Teléfono:</span><b>${pet.telefono}</b></div>
-    </div>
-    <div class="btn-container">
-      <button class="btn btn-pdf" onclick="descargarPDF()">📥 PDF</button>
-      <button class="btn btn-word" onclick="descargarWord()">📝 Word</button>
+      
+      <button class="btn" onclick="window.print()">📥 Descargar PDF</button>
     </div>`;
-
-  document.getElementById('content').innerHTML = cardHtml;
-
-  function descargarPDF() {
-    const element = document.getElementById('card-to-export');
-    html2pdf().from(element).save('Ficha_' + pet.nombre + '.pdf');
-  }
-
-  function descargarWord() {
-    const content = document.getElementById('card-to-export').innerHTML;
-    const converted = htmlDocx.asBlob(content);
-    saveAs(converted, 'Ficha_' + pet.nombre + '.docx');
-  }
 </script>
 </body>
 </html>
