@@ -2,16 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PawID - Ficha de Mascota</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: sans-serif; background: #F9F9F9; display: flex; justify-content: center; padding: 20px; }
-        .card { background: #FFFFFF; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; border: 3px solid #007777; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header { background: #007777; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center; }
-        .section-title { color: #007777; font-weight: 800; font-size: 13px; margin: 20px 0 12px 0; border-bottom: 2px solid #007777; padding-bottom: 5px; text-transform: uppercase; }
-        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F0F0F0; font-size: 14px; }
-        .btn { width: 100%; background: #007777; color: white; border: none; border-radius: 10px; padding: 15px; font-weight: bold; cursor: pointer; margin-top: 25px; font-size: 16px; }
+        body { font-family: sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 20px; }
+        
+        /* Diseño que coincide con tu imagen de referencia */
+        .card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            border: 2px solid #008080; /* Borde verde */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .header { background: #008080; color: white; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+        .section-title { color: #008080; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #008080; padding-bottom: 5px; }
+        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
+        
+        .btn {
+            width: 100%; background: #008080; color: white; border: none; 
+            border-radius: 8px; padding: 15px; font-weight: bold; cursor: pointer; margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -21,16 +37,17 @@
 <script>
     const params = new URLSearchParams(window.location.search);
     const pet = {
-        nombre: params.get('n') || 'N/A',
-        especie: params.get('e') || 'N/A',
-        raza: params.get('r') || 'N/A',
-        nacimiento: params.get('f') || 'N/A',
-        edad: params.get('ed') || 'N/A',
-        dueno: params.get('d') || 'N/A',
-        telefono: params.get('t') || 'N/A',
-        id: params.get('id') || '000000'
+        nombre: params.get('n') || '---',
+        especie: params.get('e') || '---',
+        raza: params.get('r') || '---',
+        nacimiento: params.get('f') || '---',
+        edad: params.get('ed') || '---',
+        dueno: params.get('d') || '---',
+        telefono: params.get('t') || '---',
+        id: params.get('id') || '---'
     };
 
+    // Renderizado del documento igual al que se ve en la App
     document.getElementById('content').innerHTML = `
         <div class="card">
             <div class="header"><h2>PawID</h2><p>Ficha de Mascota</p></div>
@@ -40,28 +57,30 @@
             <div class="row"><span>Raza:</span><b>${pet.raza}</b></div>
             <div class="row"><span>Nacimiento:</span><b>${pet.nacimiento}</b></div>
             <div class="row"><span>Edad:</span><b>${pet.edad}</b></div>
-            <div class="section-title">DATOS DEL DUEÑO</div>
+            <div class="section-title" style="margin-top:20px;">DATOS DEL DUEÑO</div>
             <div class="row"><span>Nombre:</span><b>${pet.dueno}</b></div>
             <div class="row"><span>Teléfono:</span><b>${pet.telefono}</b></div>
-            <button class="btn" onclick="abrirVisorPDF()">👁️ Ver y Descargar Ficha</button>
+            <button class="btn" onclick="abrirPrevisualizacion()">👁️ Ver y Descargar Ficha</button>
         </div>`;
 
-    function abrirVisorPDF() {
+    function abrirPrevisualizacion() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // --- AQUÍ CONSTRUIMOS EL DISEÑO DEL PDF ---
-        doc.setFontSize(20); doc.text("Ficha de Mascota - PawID", 20, 20);
-        doc.setFontSize(12); doc.text(`ID Mascota: ${pet.id}`, 20, 30);
-        doc.line(20, 35, 190, 35);
+        // Estructura del PDF (Diseño verde)
+        doc.setFillColor(0, 128, 128); // Color verde
+        doc.rect(10, 10, 190, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.text("PawID - Ficha de Mascota", 15, 22);
         
-        let y = 45;
-        const datos = [["Nombre", pet.nombre], ["Especie", pet.especie], ["Raza", pet.raza], ["Nacimiento", pet.nacimiento], ["Edad", pet.edad], ["Dueño", pet.dueno], ["Teléfono", pet.telefono]];
-        datos.forEach(item => { doc.text(`${item[0]}: ${item[1]}`, 20, y); y += 10; });
-
-        // --- ESTA ES LA CLAVE PARA VISUALIZAR ---
-        const pdfData = doc.output('bloburl'); // Genera una URL temporal
-        window.open(pdfData, '_blank'); // Abre el PDF en una nueva pestaña (visualización)
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Nombre: ${pet.nombre}`, 20, 50);
+        doc.text(`Especie: ${pet.especie}`, 20, 60);
+        doc.text(`Raza: ${pet.raza}`, 20, 70);
+        
+        // --- AQUÍ ESTÁ EL TRUCO PARA VERLO ---
+        const blob = doc.output('bloburl');
+        window.open(blob, '_blank'); // Abre el visor de PDF del navegador
     }
 </script>
 </body>
