@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PawID - Ficha de Mascota</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #F5E6D3;
+    background: #FFFFFF; /* Fondo blanco limpio */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -17,16 +16,16 @@
     padding: 24px 16px;
   }
   .card {
-    background: white;
+    background: #FFFFFF;
     border-radius: 18px;
     padding: 28px 24px;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 8px 32px rgba(107,58,42,0.12);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     margin-bottom: 16px;
   }
   .header {
-    background: #6B3A2A;
+    background: #007777;
     border-radius: 12px;
     padding: 20px;
     display: flex;
@@ -36,56 +35,38 @@
   }
   .avatar {
     width: 60px; height: 60px;
-    background: #F5E6D3;
+    background: #FFFFFF;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px; font-weight: bold; color: #6B3A2A;
-    flex-shrink: 0;
+    font-size: 28px; font-weight: bold; color: #007777;
   }
-  .header-text h1 { color: white; font-size: 22px; font-weight: 700; }
-  .header-text p { color: #F5E6D3; font-size: 13px; margin-top: 3px; }
+  .header-text h1 { color: #FFFFFF; font-size: 22px; font-weight: 700; }
+  .header-text p { color: #E0F2F1; font-size: 13px; margin-top: 3px; }
   .section-title {
     font-size: 12px; font-weight: 700;
-    color: #6B3A2A; margin-bottom: 12px;
+    color: #007777; margin-bottom: 12px;
     text-transform: uppercase; letter-spacing: 0.8px;
   }
   .row {
     display: flex; justify-content: space-between;
     padding: 9px 0;
-    border-bottom: 1px solid #F5E6D3;
+    border-bottom: 1px solid #F0F0F0;
     font-size: 14px;
-    gap: 12px;
   }
-  .row:last-child { border-bottom: none; }
-  .label { color: #7A5C4A; flex-shrink: 0; }
-  .value { color: #3D2010; font-weight: 600; text-align: right; }
-  .divider { height: 1px; background: #F5E6D3; margin: 20px 0; }
+  .label { color: #666; }
+  .value { color: #333; font-weight: 600; }
   .btn {
     display: block; width: 100%;
-    background: #6B3A2A; color: white;
+    background: #007777; color: white;
     border: none; border-radius: 10px;
     padding: 16px; font-size: 16px;
     font-weight: 700; cursor: pointer;
-    text-align: center; margin-top: 8px;
-    transition: background 0.2s;
+    text-align: center; margin-top: 20px;
   }
-  .btn:active { background: #8B5A3A; }
   .footer {
-    color: #AA8A78; font-size: 11px;
-    text-align: center; margin-top: 10px;
+    color: #AAA; font-size: 11px;
+    text-align: center; margin-top: 20px;
   }
-  .error-card {
-    background: white;
-    border-radius: 18px;
-    padding: 40px 24px;
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-    box-shadow: 0 8px 32px rgba(107,58,42,0.12);
-  }
-  .error-card h2 { color: #6B3A2A; margin-bottom: 12px; }
-  .error-card p { color: #7A5C4A; font-size: 14px; line-height: 1.5; }
-  .paw { font-size: 48px; margin-bottom: 16px; }
 </style>
 </head>
 <body>
@@ -93,167 +74,45 @@
 <div id="content"></div>
 
 <script>
-  // Lee los parámetros del QR de la URL
   const params = new URLSearchParams(window.location.search);
-
   const pet = {
-    nombre:    params.get('n')  || '',
-    especie:   params.get('e')  || '',
-    raza:      params.get('r')  || '',
-    nacimiento:params.get('f')  || '',
-    edad:      params.get('ed') || '',
-    dueno:     params.get('d')  || '',
-    telefono:  params.get('t')  || '',
-    email:     params.get('em') || '',
-    id:        params.get('id') || '',
+    nombre: params.get('n') || '',
+    especie: params.get('e') || '',
+    raza: params.get('r') || '',
+    nacimiento: params.get('f') || '',
+    edad: params.get('ed') || '',
+    dueno: params.get('d') || '',
+    telefono: params.get('t') || '',
   };
 
   const content = document.getElementById('content');
+  const inicial = pet.nombre ? pet.nombre.charAt(0).toUpperCase() : '?';
 
   if (!pet.nombre) {
-    content.innerHTML = `
-      <div class="error-card">
-        <div class="paw">🐾</div>
-        <h2>PawID</h2>
-        <p>No se encontraron datos de mascota.<br>Escanea el código QR desde la app PawID.</p>
-      </div>`;
+    content.innerHTML = `<div class="card"><p>No se encontraron datos.</p></div>`;
   } else {
-    const inicial = pet.nombre.charAt(0).toUpperCase();
-    const emailRow = pet.email
-      ? `<div class="row"><span class="label">Email</span><span class="value">${esc(pet.email)}</span></div>`
-      : '';
-
     content.innerHTML = `
       <div class="card">
         <div class="header">
           <div class="avatar">${inicial}</div>
           <div class="header-text">
-            <h1>${esc(pet.nombre)}</h1>
-            <p>${esc(pet.especie)} · ${esc(pet.raza)}</p>
+            <h1>${pet.nombre}</h1>
+            <p>${pet.especie} · ${pet.raza}</p>
           </div>
         </div>
-
-        <div class="section-title">🐾 Datos de la Mascota</div>
-        <div class="row"><span class="label">Nombre</span><span class="value">${esc(pet.nombre)}</span></div>
-        <div class="row"><span class="label">Especie</span><span class="value">${esc(pet.especie)}</span></div>
-        <div class="row"><span class="label">Raza</span><span class="value">${esc(pet.raza)}</span></div>
-        <div class="row"><span class="label">Fecha de nacimiento</span><span class="value">${esc(pet.nacimiento)}</span></div>
-        <div class="row"><span class="label">Edad</span><span class="value">${esc(pet.edad)}</span></div>
-
-        <div class="divider"></div>
-
-        <div class="section-title">👤 Datos del Dueño</div>
-        <div class="row"><span class="label">Nombre</span><span class="value">${esc(pet.dueno)}</span></div>
-        <div class="row"><span class="label">Teléfono</span><span class="value">${esc(pet.telefono)}</span></div>
-        ${emailRow}
-
-        <div class="divider"></div>
-
-        <button class="btn" onclick="descargarPDF()">⬇ Descargar PDF</button>
+        <div class="section-title">Datos de la Mascota</div>
+        <div class="row"><span class="label">Nombre</span><span class="value">${pet.nombre}</span></div>
+        <div class="row"><span class="label">Especie</span><span class="value">${pet.especie}</span></div>
+        <div class="row"><span class="label">Raza</span><span class="value">${pet.raza}</span></div>
+        <div class="row"><span class="label">Nacimiento</span><span class="value">${pet.nacimiento}</span></div>
+        <div class="row"><span class="label">Edad</span><span class="value">${pet.edad}</span></div>
+        <br>
+        <div class="section-title">Datos del Dueño</div>
+        <div class="row"><span class="label">Nombre</span><span class="value">${pet.dueno}</span></div>
+        <div class="row"><span class="label">Teléfono</span><span class="value">${pet.telefono}</span></div>
+        <button class="btn" onclick="window.print()">Descargar PDF</button>
         <p class="footer">Generado por PawID</p>
       </div>`;
-  }
-
-  function esc(s) {
-    return String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;');
-  }
-
-  function descargarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const w = doc.internal.pageSize.getWidth();
-
-    // Fondo beige
-    doc.setFillColor(245, 230, 211);
-    doc.rect(0, 0, w, 297, 'F');
-
-    // Header marrón
-    doc.setFillColor(107, 58, 42);
-    doc.roundedRect(14, 14, w - 28, 34, 4, 4, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PawID', 24, 28);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Ficha de Mascota', 24, 38);
-
-    // Nombre mascota
-    doc.setTextColor(61, 32, 16);
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(pet.nombre, 14, 65);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(122, 92, 74);
-    doc.text(pet.especie + ' - ' + pet.raza, 14, 73);
-
-    // Sección mascota
-    let y = 88;
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(14, y - 6, w - 28, 70, 3, 3, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 58, 42);
-    doc.text('DATOS DE LA MASCOTA', 20, y + 3);
-    y += 12;
-
-    [
-      ['Nombre', pet.nombre],
-      ['Especie', pet.especie],
-      ['Raza', pet.raza],
-      ['Fecha de nacimiento', pet.nacimiento],
-      ['Edad', pet.edad],
-    ].forEach(([label, value]) => {
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(122, 92, 74);
-      doc.setFontSize(9);
-      doc.text(label, 20, y);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(61, 32, 16);
-      doc.text(String(value), 95, y);
-      y += 10;
-    });
-
-    // Sección dueño
-    y += 6;
-    const ownerRows = [['Nombre', pet.dueno], ['Telefono', pet.telefono]];
-    if (pet.email) ownerRows.push(['Email', pet.email]);
-    const ownerH = 20 + ownerRows.length * 10;
-
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(14, y - 6, w - 28, ownerH, 3, 3, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 58, 42);
-    doc.text('DATOS DEL DUENO', 20, y + 3);
-    y += 12;
-
-    ownerRows.forEach(([label, value]) => {
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(122, 92, 74);
-      doc.setFontSize(9);
-      doc.text(label, 20, y);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(61, 32, 16);
-      doc.text(String(value), 95, y);
-      y += 10;
-    });
-
-    // Footer
-    y += 10;
-    doc.setFillColor(245, 230, 211);
-    doc.roundedRect(14, y, w - 28, 12, 2, 2, 'F');
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(122, 92, 74);
-    doc.text('Generado por PawID', 20, y + 8);
-
-    doc.save('PawID_' + pet.nombre.replace(/ /g, '_') + '.pdf');
   }
 </script>
 </body>
