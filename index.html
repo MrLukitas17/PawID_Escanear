@@ -111,112 +111,20 @@
             justify-content: center;
             gap: 8px;
         }
-        .btn-view { background: #007777; color: white; }
         .btn-download { background: #00A3A3; color: white; }
-
-        /* ---- MODAL para "Ver ficha en PDF" ---- */
-        .pdf-modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.55);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
-        .pdf-modal-overlay.active {
-            display: flex;
-        }
-        .pdf-modal-box {
-            background: #fff;
-            width: 95%;
-            max-width: 560px;
-            height: 90vh;
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .pdf-modal-header {
-            background: #007777;
-            color: white;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 700;
-        }
-        .pdf-modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-            line-height: 1;
-        }
-        .pdf-modal-iframe {
-            flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
-        }
-        .photo-upload {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            background: #fff;
-            border: 2px dashed #00A3A3;
-            border-radius: 12px;
-            padding: 12px 16px;
-        }
-        .photo-upload-preview {
-            width: 48px; height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #00A3A3;
-            background: #E0F7FA;
-            display: none;
-        }
-        .photo-upload-label {
-            flex: 1;
-            color: #007777;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .photo-upload input[type="file"] { display: none; }
     </style>
 </head>
 <body>
 
     <div class="top-logo"><span>🐾 PawID</span></div>
 
-    <div class="photo-upload">
-        <img id="photoPreview" class="photo-upload-preview" alt="Vista previa">
-        <label class="photo-upload-label" for="photoInput">📷 Subir foto de la mascota</label>
-        <input type="file" id="photoInput" accept="image/*">
-    </div>
-
     <div class="main-card" id="content"></div>
     <div class="btn-group">
-        <button class="btn btn-view" onclick="verPDF()">👁️ VER FICHA EN PDF</button>
-        <button class="btn btn-download" onclick="descargarPDF()">⬇️ DESCARGAR PDF</button>
-    </div>
-
-    <!-- Modal que muestra el PDF embebido, sin disparar descarga -->
-    <div class="pdf-modal-overlay" id="pdfModal">
-        <div class="pdf-modal-box">
-            <div class="pdf-modal-header">
-                <span>Ficha de Mascota</span>
-                <button class="pdf-modal-close" onclick="cerrarModalPDF()">&times;</button>
-            </div>
-            <iframe class="pdf-modal-iframe" id="pdfFrame"></iframe>
-        </div>
+        <button class="btn btn-download" id="downloadBtn" onclick="descargarPDF()">⬇️ DESCARGAR PDF</button>
     </div>
 
 <script>
@@ -229,7 +137,7 @@
     }
 
     const params = new URLSearchParams(window.location.search);
-    let pet = {
+    const pet = {
         n:   limpiar(params.get('n'),  '---'),
         e:   limpiar(params.get('e'),  '---'),
         r:   limpiar(params.get('r'),  '---'),
@@ -238,15 +146,16 @@
         d:   limpiar(params.get('d'),  '---'),
         t:   limpiar(params.get('t'),  '---'),
         id:  limpiar(params.get('id'), '---'),
+        // La foto ahora siempre llega como URL pública de Supabase Storage,
+        // enviada por la app Flutter a través del parámetro 'img'.
         img: params.get('img') || null
     };
 
-    function renderCard() {
-        const headerRight = pet.img
-            ? `<img src="${pet.img}" class="pet-img" onerror="this.outerHTML='<div class=pet-initial>${pet.n[0].toUpperCase()}</div>'">`
-            : `<div class="pet-initial">${pet.n[0].toUpperCase()}</div>`;
+    const headerRight = pet.img
+        ? `<img src="${pet.img}" class="pet-img" onerror="this.outerHTML='<div class=pet-initial>${pet.n[0].toUpperCase()}</div>'">`
+        : `<div class="pet-initial">${pet.n[0].toUpperCase()}</div>`;
 
-        document.getElementById('content').innerHTML = `
+    document.getElementById('content').innerHTML = `
         <div class="header">
             <div><h2>PawID</h2><small>Ficha de Mascota</small></div>
             ${headerRight}
@@ -269,31 +178,15 @@
             <span>Generado por PawID</span>
         </div>
     `;
-    }
 
-    renderCard();
-
-    // Maneja la selección de foto del usuario: la convierte a base64,
-    // actualiza la vista previa, re-renderiza la tarjeta y queda lista para el PDF
-    document.getElementById('photoInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            pet.img = ev.target.result; // base64 data URL
-            const preview = document.getElementById('photoPreview');
-            preview.src = pet.img;
-            preview.style.display = 'block';
-            renderCard();
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // Recorta una imagen (data URL) en un círculo, devuelve una Promise<dataURL PNG>.
-    // Necesario porque jsPDF no soporta clip circular nativo para addImage,
-    // y hay que esperar a que la imagen termine de decodificarse.
-    function recortarCircular(dataUrl, size) {
+    // Recorta una imagen (URL o data URL) en un círculo, devuelve una
+    // Promise<dataURL PNG>. Necesario porque jsPDF no soporta clip circular
+    // nativo para addImage, y porque hay que esperar a que la imagen cargue.
+    //
+    // crossOrigin = 'anonymous' es indispensable: la foto viene de un dominio
+    // distinto (Supabase Storage), y sin esto el canvas queda "contaminado"
+    // (tainted) y toDataURL() falla silenciosamente por política CORS.
+    function recortarCircular(url, size) {
         return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
             canvas.width = size;
@@ -301,18 +194,23 @@
             const ctx = canvas.getContext('2d');
 
             const img = new Image();
+            img.crossOrigin = 'anonymous';
             img.onload = function() {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.clip();
-                ctx.drawImage(img, 0, 0, size, size);
-                ctx.restore();
-                resolve(canvas.toDataURL('image/png'));
+                try {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+                    ctx.drawImage(img, 0, 0, size, size);
+                    ctx.restore();
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (err) {
+                    reject(err);
+                }
             };
             img.onerror = reject;
-            img.src = dataUrl;
+            img.src = url;
         });
     }
 
@@ -339,10 +237,19 @@
         doc.circle(w - 30, 30, 12, 'F');
 
         if (pet.img) {
-            // Recorta la imagen en círculo usando un canvas, igual que en el HTML
-            const circularImg = await recortarCircular(pet.img, 96);
-            const cx = w - 30, cy = 30, radius = 12;
-            doc.addImage(circularImg, 'PNG', cx - radius, cy - radius, radius * 2, radius * 2);
+            try {
+                // Recorta la imagen en círculo usando un canvas, igual que en el HTML
+                const circularImg = await recortarCircular(pet.img, 96);
+                const cx = w - 30, cy = 30, radius = 12;
+                doc.addImage(circularImg, 'PNG', cx - radius, cy - radius, radius * 2, radius * 2);
+            } catch (err) {
+                // Si la imagen no carga (sin internet, URL rota, CORS), usamos
+                // la inicial como respaldo en vez de dejar el PDF roto.
+                doc.setTextColor(0, 119, 119);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text(pet.n[0].toUpperCase(), w - 33, 34);
+            }
         } else {
             doc.setTextColor(0, 119, 119);
             doc.setFontSize(14);
@@ -408,35 +315,22 @@
         return doc;
     }
 
-    let pdfBlobUrl = null;
-
-    // Ver PDF: lo muestra DENTRO de un modal embebido (iframe), nunca descarga
-    async function verPDF() {
-        const doc = await generarPDF();
-        const blob = doc.output('blob');
-
-        // Libera la URL anterior si existía, para no acumular memoria
-        if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
-        pdfBlobUrl = URL.createObjectURL(blob);
-
-        document.getElementById('pdfFrame').src = pdfBlobUrl;
-        document.getElementById('pdfModal').classList.add('active');
-    }
-
-    function cerrarModalPDF() {
-        document.getElementById('pdfModal').classList.remove('active');
-        document.getElementById('pdfFrame').src = '';
-    }
-
-    // Cierra el modal si se toca fuera del recuadro
-    document.getElementById('pdfModal').addEventListener('click', function(e) {
-        if (e.target === this) cerrarModalPDF();
-    });
-
     // Descargar PDF directamente
     async function descargarPDF() {
-        const doc = await generarPDF();
-        doc.save(`PawID_${pet.n}.pdf`);
+        const btn = document.getElementById('downloadBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Generando...';
+
+        try {
+            const doc = await generarPDF();
+            doc.save(`PawID_${pet.n}.pdf`);
+        } catch (err) {
+            alert('No se pudo generar el PDF. Intenta de nuevo.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
     }
 </script>
 </body>
