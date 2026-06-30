@@ -239,6 +239,11 @@
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
         const w = 210;
 
+        // Borde decorativo redondeado alrededor de toda la ficha
+        doc.setDrawColor(0, 163, 163);
+        doc.setLineWidth(0.8);
+        doc.roundedRect(13, 13, w - 26, 145, 6, 6, 'S');
+
         doc.setFillColor(0, 119, 119);
         doc.roundedRect(15, 15, w - 30, 30, 4, 4, 'F');
         doc.setTextColor(255, 255, 255);
@@ -303,7 +308,7 @@
         });
 
         doc.setFillColor(224, 247, 250);
-        doc.rect(15, 145, w - 30, 10, 'F');
+        doc.roundedRect(15, 145, w - 30, 10, 3, 3, 'F');
         doc.setTextColor(0, 119, 119);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
