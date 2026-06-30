@@ -7,7 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             font-family: 'Segoe UI', sans-serif;
             background-color: #F5F5F0;
@@ -17,21 +16,13 @@
             padding: 20px;
             min-height: 100vh;
         }
-
-        /* Logo superior */
         .top-logo {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 20px;
         }
-        .top-logo span {
-            font-size: 22px;
-            font-weight: 700;
-            color: #007777;
-        }
-
-        /* Card principal */
+        .top-logo span { font-size: 22px; font-weight: 700; color: #007777; }
         .main-card {
             background: #FEFEFE;
             width: 100%;
@@ -41,8 +32,6 @@
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,119,119,0.12);
         }
-
-        /* Header */
         .header {
             background-color: #007777;
             padding: 20px;
@@ -54,15 +43,13 @@
         .header h2 { font-size: 22px; font-weight: 700; }
         .header small { color: #E0F7FA; font-size: 13px; }
         .pet-img {
-            width: 64px;
-            height: 64px;
+            width: 64px; height: 64px;
             border-radius: 50%;
             border: 2.5px solid white;
             object-fit: cover;
         }
         .pet-initial {
-            width: 64px;
-            height: 64px;
+            width: 64px; height: 64px;
             background: #E0F7FA;
             border-radius: 50%;
             border: 2px solid white;
@@ -73,8 +60,6 @@
             font-size: 26px;
             font-weight: 700;
         }
-
-        /* Secciones */
         .section-title {
             background-color: #00A3A3;
             color: white;
@@ -96,8 +81,6 @@
         .row:last-child { margin-bottom: 0; }
         .label { color: #666; }
         .value { color: #1A1A3A; font-weight: 700; }
-
-        /* Footer de la card */
         .card-footer {
             background: #E0F7FA;
             padding: 10px 16px;
@@ -106,8 +89,6 @@
             font-size: 11px;
             color: #007777;
         }
-
-        /* Botones */
         .btn-group {
             width: 100%;
             max-width: 500px;
@@ -129,30 +110,15 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: opacity 0.2s;
         }
-        .btn:active { opacity: 0.85; }
-        .btn-view {
-            background: #007777;
-            color: white;
-        }
-        .btn-download {
-            background: #00A3A3;
-            color: white;
-        }
+        .btn-view { background: #007777; color: white; }
+        .btn-download { background: #00A3A3; color: white; }
     </style>
 </head>
 <body>
 
-    <!-- Logo -->
-    <div class="top-logo">
-        <span>🐾 PawID</span>
-    </div>
-
-    <!-- Card -->
+    <div class="top-logo"><span>🐾 PawID</span></div>
     <div class="main-card" id="content"></div>
-
-    <!-- Botones -->
     <div class="btn-group">
         <button class="btn btn-view" onclick="verPDF()">👁️ VER FICHA EN PDF</button>
         <button class="btn btn-download" onclick="descargarPDF()">⬇️ DESCARGAR PDF</button>
@@ -178,13 +144,9 @@
 
     document.getElementById('content').innerHTML = `
         <div class="header">
-            <div>
-                <h2>PawID</h2>
-                <small>Ficha de Mascota</small>
-            </div>
+            <div><h2>PawID</h2><small>Ficha de Mascota</small></div>
             ${headerRight}
         </div>
-
         <div class="section-title">Datos de la Mascota</div>
         <div class="section-content">
             <div class="row"><span class="label">Nombre</span><span class="value">${pet.n}</span></div>
@@ -193,30 +155,24 @@
             <div class="row"><span class="label">Fecha de nacimiento</span><span class="value">${pet.f}</span></div>
             <div class="row"><span class="label">Edad</span><span class="value">${pet.ed}</span></div>
         </div>
-
         <div class="section-title">Datos del Dueño</div>
         <div class="section-content">
             <div class="row"><span class="label">Nombre</span><span class="value">${pet.d}</span></div>
             <div class="row"><span class="label">Teléfono</span><span class="value">${pet.t}</span></div>
         </div>
-
         <div class="card-footer">
             <span>ID: ${pet.id}</span>
             <span>Generado por PawID</span>
         </div>
     `;
 
-    // Genera el PDF con diseño similar al de la app
     function generarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: 'mm', format: 'a4' });
         const w = 210;
 
-        // Header verde
         doc.setFillColor(0, 119, 119);
         doc.roundedRect(15, 15, w - 30, 30, 4, 4, 'F');
-
-        // Título
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
@@ -224,8 +180,6 @@
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.text('Ficha de Mascota', 25, 35);
-
-        // Inicial de la mascota (círculo)
         doc.setFillColor(224, 247, 250);
         doc.circle(w - 30, 30, 12, 'F');
         doc.setTextColor(0, 119, 119);
@@ -233,18 +187,13 @@
         doc.setFont('helvetica', 'bold');
         doc.text(pet.n[0].toUpperCase(), w - 33, 34);
 
-        // Sección Mascota
         doc.setFillColor(0, 163, 163);
         doc.roundedRect(15, 52, w - 30, 8, 2, 2, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(11);
         doc.text('Datos de la Mascota', 20, 58);
-
         doc.setFillColor(245, 245, 240);
         doc.rect(15, 60, w - 30, 45, 'F');
-        doc.setTextColor(102, 102, 102);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
 
         const mascotaData = [
             ['Nombre', pet.n],
@@ -256,38 +205,34 @@
         mascotaData.forEach(([label, value], i) => {
             const y = 69 + i * 8;
             doc.setTextColor(102, 102, 102);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
             doc.text(label, 20, y);
             doc.setTextColor(26, 26, 58);
             doc.setFont('helvetica', 'bold');
             doc.text(value, 100, y);
-            doc.setFont('helvetica', 'normal');
         });
 
-        // Sección Dueño
         doc.setFillColor(0, 163, 163);
         doc.roundedRect(15, 110, w - 30, 8, 2, 2, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(11);
         doc.text('Datos del Dueño', 20, 116);
-
         doc.setFillColor(245, 245, 240);
         doc.rect(15, 118, w - 30, 22, 'F');
 
-        const duenoData = [
-            ['Nombre', pet.d],
-            ['Teléfono', pet.t],
-        ];
+        const duenoData = [['Nombre', pet.d], ['Teléfono', pet.t]];
         duenoData.forEach(([label, value], i) => {
             const y = 127 + i * 8;
             doc.setTextColor(102, 102, 102);
             doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
             doc.text(label, 20, y);
             doc.setTextColor(26, 26, 58);
             doc.setFont('helvetica', 'bold');
             doc.text(value, 100, y);
         });
 
-        // Footer
         doc.setFillColor(224, 247, 250);
         doc.rect(15, 145, w - 30, 10, 'F');
         doc.setTextColor(0, 119, 119);
@@ -299,14 +244,23 @@
         return doc;
     }
 
-    // Ver en el navegador
+    // Ver PDF: abre en nueva pestaña en desktop, descarga en móvil
     function verPDF() {
         const doc = generarPDF();
-        const blobUrl = doc.output('bloburl');
-        window.open(blobUrl, '_blank');
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        // Intenta abrir en nueva pestaña
+        const newTab = window.open(url, '_blank');
+        // Si el navegador móvil bloquea la pestaña, descarga
+        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.click();
+        }
     }
 
-    // Descargar
+    // Descargar PDF directamente
     function descargarPDF() {
         const doc = generarPDF();
         doc.save(`PawID_${pet.n}.pdf`);
