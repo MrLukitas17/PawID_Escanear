@@ -4,73 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PawID - Ficha de Mascota</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* CSS REPLICANDO TU DISEÑO DE FLUTTER */
-        body { 
-            font-family: sans-serif; 
-            background-color: #F5F5F0; /* Tu color _beige */
-            display: flex; 
-            justify-content: center; 
-            padding: 20px; 
-        }
-        .main-card {
-            background: #FEFEFE; /* Tu color _white */
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            border-radius: 14px;
-            border: 2.5px solid #00A3A3; /* Tu color _border */
-        }
-        .header {
-            background-color: #007777; /* Tu color _primary */
-            padding: 20px;
-            border-radius: 10px;
-            color: #FEFEFE;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .section-title {
-            background-color: #00A3A3; /* Tu color _primaryLight */
-            color: white;
-            padding: 10px;
-            margin: 15px 0 0 0;
-            border-radius: 6px 6px 0 0;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .section-content {
-            background-color: #F5F5F0; /* Tu color _beige */
-            padding: 15px;
-            border: 1px solid #00A3A3;
-            border-radius: 0 0 6px 6px;
-        }
-        .row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .label { color: #666666; } /* Tu color _textLight */
-        .value { color: #1A1A3A; font-weight: bold; } /* Tu color _textDark */
-        
-        .btn {
-            width: 100%;
-            background: #007777;
-            color: white;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        body { font-family: sans-serif; background-color: #F5F5F0; display: flex; justify-content: center; padding: 20px; }
+        .main-card { background: #FEFEFE; width: 100%; max-width: 500px; padding: 20px; border-radius: 14px; border: 2.5px solid #00A3A3; }
+        .header { background-color: #007777; padding: 20px; border-radius: 10px; color: #FEFEFE; display: flex; justify-content: space-between; align-items: center; }
+        .pet-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid white; object-fit: cover; }
+        .section-title { background-color: #00A3A3; color: white; padding: 10px; margin: 15px 0 0 0; border-radius: 6px 6px 0 0; font-weight: bold; font-size: 14px; }
+        .section-content { background-color: #F5F5F0; padding: 15px; border: 1px solid #00A3A3; border-radius: 0 0 6px 6px; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .label { color: #666666; }
+        .value { color: #1A1A3A; font-weight: bold; }
+        .btn { width: 100%; background: #007777; color: white; padding: 15px; border: none; border-radius: 10px; margin-top: 20px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="main-card" id="content">
-    </div>
+<div class="main-card" id="content"></div>
 
 <script>
     const params = new URLSearchParams(window.location.search);
@@ -81,20 +31,20 @@
         f: params.get('f') || '---',
         ed: params.get('ed') || '---',
         d: params.get('d') || '---',
-        t: params.get('t') || '---'
+        t: params.get('t') || '---',
+        img: params.get('img') // URL de la imagen
     };
+
+    // Renderizamos la imagen si existe
+    const headerRight = pet.img 
+        ? `<img src="${pet.img}" class="pet-img">` 
+        : `<div style="width: 50px; height: 50px; background: #E0F7FA; border-radius: 50%; color: #007777; display: flex; align-items: center; justify-content: center; font-weight: bold;">${pet.n[0]}</div>`;
 
     document.getElementById('content').innerHTML = `
         <div class="header">
-            <div>
-                <h2>PawID</h2>
-                <small style="color: #E0F7FA;">Ficha de Mascota</small>
-            </div>
-            <div style="width: 50px; height: 50px; background: #E0F7FA; border-radius: 50%; color: #007777; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                ${pet.n[0]}
-            </div>
+            <div><h2>PawID</h2><small style="color: #E0F7FA;">Ficha de Mascota</small></div>
+            ${headerRight}
         </div>
-
         <div class="section-title">Datos de la Mascota</div>
         <div class="section-content">
             <div class="row"><span class="label">Nombre</span><span class="value">${pet.n}</span></div>
@@ -103,15 +53,32 @@
             <div class="row"><span class="label">Nacimiento</span><span class="value">${pet.f}</span></div>
             <div class="row"><span class="label">Edad</span><span class="value">${pet.ed}</span></div>
         </div>
-
         <div class="section-title">Datos del Dueño</div>
         <div class="section-content">
             <div class="row"><span class="label">Nombre</span><span class="value">${pet.d}</span></div>
             <div class="row"><span class="label">Teléfono</span><span class="value">${pet.t}</span></div>
         </div>
-
-        <button class="btn" onclick="window.print()">📥 Imprimir/Guardar PDF</button>
+        <button class="btn" onclick="abrirPDF()">👁️ Visualizar Ficha</button>
     `;
+
+    function abrirPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.text("Ficha de Mascota - PawID", 20, 20);
+        // Si hay imagen, la dibujamos en el PDF
+        if (pet.img) {
+            // Nota: La imagen debe ser accesible vía URL (CORS)
+            doc.addImage(pet.img, 'JPEG', 160, 15, 30, 30);
+        }
+        
+        doc.text(`Nombre: ${pet.n}`, 20, 40);
+        doc.text(`Especie: ${pet.e}`, 20, 50);
+        
+        // Abre el visor del navegador en lugar de imprimir
+        const blobUrl = doc.output('bloburl');
+        window.open(blobUrl, '_blank');
+    }
 </script>
 </body>
 </html>
