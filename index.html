@@ -6,78 +6,310 @@
     <title>PawID - Ficha de Mascota</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #F5F5F0; display: flex; justify-content: center; padding: 20px; }
-        .main-card { background: #FEFEFE; width: 100%; max-width: 500px; padding: 20px; border-radius: 14px; border: 2.5px solid #00A3A3; }
-        .header { background-color: #007777; padding: 20px; border-radius: 10px; color: #FEFEFE; display: flex; justify-content: space-between; align-items: center; }
-        .pet-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid white; object-fit: cover; }
-        .section-title { background-color: #00A3A3; color: white; padding: 10px; margin: 15px 0 0 0; border-radius: 6px 6px 0 0; font-weight: bold; font-size: 14px; }
-        .section-content { background-color: #F5F5F0; padding: 15px; border: 1px solid #00A3A3; border-radius: 0 0 6px 6px; }
-        .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-        .label { color: #666666; }
-        .value { color: #1A1A3A; font-weight: bold; }
-        .btn { width: 100%; background: #007777; color: white; padding: 15px; border: none; border-radius: 10px; margin-top: 20px; font-weight: bold; cursor: pointer; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #F5F5F0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Logo superior */
+        .top-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .top-logo span {
+            font-size: 22px;
+            font-weight: 700;
+            color: #007777;
+        }
+
+        /* Card principal */
+        .main-card {
+            background: #FEFEFE;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px;
+            border: 2.5px solid #00A3A3;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,119,119,0.12);
+        }
+
+        /* Header */
+        .header {
+            background-color: #007777;
+            padding: 20px;
+            color: #FEFEFE;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h2 { font-size: 22px; font-weight: 700; }
+        .header small { color: #E0F7FA; font-size: 13px; }
+        .pet-img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2.5px solid white;
+            object-fit: cover;
+        }
+        .pet-initial {
+            width: 64px;
+            height: 64px;
+            background: #E0F7FA;
+            border-radius: 50%;
+            border: 2px solid white;
+            color: #007777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        /* Secciones */
+        .section-title {
+            background-color: #00A3A3;
+            color: white;
+            padding: 10px 16px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .section-content {
+            background-color: #F5F5F0;
+            padding: 14px 16px;
+            border-bottom: 1px solid #E0F7FA;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .row:last-child { margin-bottom: 0; }
+        .label { color: #666; }
+        .value { color: #1A1A3A; font-weight: 700; }
+
+        /* Footer de la card */
+        .card-footer {
+            background: #E0F7FA;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #007777;
+        }
+
+        /* Botones */
+        .btn-group {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 26px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.85; }
+        .btn-view {
+            background: #007777;
+            color: white;
+        }
+        .btn-download {
+            background: #00A3A3;
+            color: white;
+        }
     </style>
 </head>
 <body>
 
-<div class="main-card" id="content"></div>
+    <!-- Logo -->
+    <div class="top-logo">
+        <span>🐾 PawID</span>
+    </div>
+
+    <!-- Card -->
+    <div class="main-card" id="content"></div>
+
+    <!-- Botones -->
+    <div class="btn-group">
+        <button class="btn btn-view" onclick="verPDF()">👁️ VER FICHA EN PDF</button>
+        <button class="btn btn-download" onclick="descargarPDF()">⬇️ DESCARGAR PDF</button>
+    </div>
 
 <script>
     const params = new URLSearchParams(window.location.search);
     const pet = {
-        n: params.get('n') || '---',
-        e: params.get('e') || '---',
-        r: params.get('r') || '---',
-        f: params.get('f') || '---',
-        ed: params.get('ed') || '---',
-        d: params.get('d') || '---',
-        t: params.get('t') || '---',
-        img: params.get('img') // URL de la imagen
+        n:   params.get('n')   || '---',
+        e:   params.get('e')   || '---',
+        r:   params.get('r')   || '---',
+        f:   params.get('f')   || '---',
+        ed:  params.get('ed')  || 'N/A',
+        d:   params.get('d')   || '---',
+        t:   params.get('t')   || '---',
+        id:  params.get('id')  || '---',
+        img: params.get('img') || null
     };
 
-    // Renderizamos la imagen si existe
-    const headerRight = pet.img 
-        ? `<img src="${pet.img}" class="pet-img">` 
-        : `<div style="width: 50px; height: 50px; background: #E0F7FA; border-radius: 50%; color: #007777; display: flex; align-items: center; justify-content: center; font-weight: bold;">${pet.n[0]}</div>`;
+    const headerRight = pet.img
+        ? `<img src="${pet.img}" class="pet-img" onerror="this.outerHTML='<div class=pet-initial>${pet.n[0].toUpperCase()}</div>'">`
+        : `<div class="pet-initial">${pet.n[0].toUpperCase()}</div>`;
 
     document.getElementById('content').innerHTML = `
         <div class="header">
-            <div><h2>PawID</h2><small style="color: #E0F7FA;">Ficha de Mascota</small></div>
+            <div>
+                <h2>PawID</h2>
+                <small>Ficha de Mascota</small>
+            </div>
             ${headerRight}
         </div>
+
         <div class="section-title">Datos de la Mascota</div>
         <div class="section-content">
             <div class="row"><span class="label">Nombre</span><span class="value">${pet.n}</span></div>
             <div class="row"><span class="label">Especie</span><span class="value">${pet.e}</span></div>
             <div class="row"><span class="label">Raza</span><span class="value">${pet.r}</span></div>
-            <div class="row"><span class="label">Nacimiento</span><span class="value">${pet.f}</span></div>
+            <div class="row"><span class="label">Fecha de nacimiento</span><span class="value">${pet.f}</span></div>
             <div class="row"><span class="label">Edad</span><span class="value">${pet.ed}</span></div>
         </div>
+
         <div class="section-title">Datos del Dueño</div>
         <div class="section-content">
             <div class="row"><span class="label">Nombre</span><span class="value">${pet.d}</span></div>
             <div class="row"><span class="label">Teléfono</span><span class="value">${pet.t}</span></div>
         </div>
-        <button class="btn" onclick="abrirPDF()">👁️ Visualizar Ficha</button>
+
+        <div class="card-footer">
+            <span>ID: ${pet.id}</span>
+            <span>Generado por PawID</span>
+        </div>
     `;
 
-    function abrirPDF() {
+    // Genera el PDF con diseño similar al de la app
+    function generarPDF() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.text("Ficha de Mascota - PawID", 20, 20);
-        // Si hay imagen, la dibujamos en el PDF
-        if (pet.img) {
-            // Nota: La imagen debe ser accesible vía URL (CORS)
-            doc.addImage(pet.img, 'JPEG', 160, 15, 30, 30);
-        }
-        
-        doc.text(`Nombre: ${pet.n}`, 20, 40);
-        doc.text(`Especie: ${pet.e}`, 20, 50);
-        
-        // Abre el visor del navegador en lugar de imprimir
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        const w = 210;
+
+        // Header verde
+        doc.setFillColor(0, 119, 119);
+        doc.roundedRect(15, 15, w - 30, 30, 4, 4, 'F');
+
+        // Título
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PawID', 25, 28);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Ficha de Mascota', 25, 35);
+
+        // Inicial de la mascota (círculo)
+        doc.setFillColor(224, 247, 250);
+        doc.circle(w - 30, 30, 12, 'F');
+        doc.setTextColor(0, 119, 119);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(pet.n[0].toUpperCase(), w - 33, 34);
+
+        // Sección Mascota
+        doc.setFillColor(0, 163, 163);
+        doc.roundedRect(15, 52, w - 30, 8, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.text('Datos de la Mascota', 20, 58);
+
+        doc.setFillColor(245, 245, 240);
+        doc.rect(15, 60, w - 30, 45, 'F');
+        doc.setTextColor(102, 102, 102);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+
+        const mascotaData = [
+            ['Nombre', pet.n],
+            ['Especie', pet.e],
+            ['Raza', pet.r],
+            ['Fecha de nacimiento', pet.f],
+            ['Edad', pet.ed],
+        ];
+        mascotaData.forEach(([label, value], i) => {
+            const y = 69 + i * 8;
+            doc.setTextColor(102, 102, 102);
+            doc.text(label, 20, y);
+            doc.setTextColor(26, 26, 58);
+            doc.setFont('helvetica', 'bold');
+            doc.text(value, 100, y);
+            doc.setFont('helvetica', 'normal');
+        });
+
+        // Sección Dueño
+        doc.setFillColor(0, 163, 163);
+        doc.roundedRect(15, 110, w - 30, 8, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.text('Datos del Dueño', 20, 116);
+
+        doc.setFillColor(245, 245, 240);
+        doc.rect(15, 118, w - 30, 22, 'F');
+
+        const duenoData = [
+            ['Nombre', pet.d],
+            ['Teléfono', pet.t],
+        ];
+        duenoData.forEach(([label, value], i) => {
+            const y = 127 + i * 8;
+            doc.setTextColor(102, 102, 102);
+            doc.setFont('helvetica', 'normal');
+            doc.text(label, 20, y);
+            doc.setTextColor(26, 26, 58);
+            doc.setFont('helvetica', 'bold');
+            doc.text(value, 100, y);
+        });
+
+        // Footer
+        doc.setFillColor(224, 247, 250);
+        doc.rect(15, 145, w - 30, 10, 'F');
+        doc.setTextColor(0, 119, 119);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`ID: ${pet.id}`, 20, 152);
+        doc.text('Generado por PawID', w - 55, 152);
+
+        return doc;
+    }
+
+    // Ver en el navegador
+    function verPDF() {
+        const doc = generarPDF();
         const blobUrl = doc.output('bloburl');
         window.open(blobUrl, '_blank');
+    }
+
+    // Descargar
+    function descargarPDF() {
+        const doc = generarPDF();
+        doc.save(`PawID_${pet.n}.pdf`);
     }
 </script>
 </body>
