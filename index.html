@@ -113,6 +113,55 @@
         }
         .btn-view { background: #007777; color: white; }
         .btn-download { background: #00A3A3; color: white; }
+
+        /* ---- MODAL para "Ver ficha en PDF" ---- */
+        .pdf-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .pdf-modal-overlay.active {
+            display: flex;
+        }
+        .pdf-modal-box {
+            background: #fff;
+            width: 95%;
+            max-width: 560px;
+            height: 90vh;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .pdf-modal-header {
+            background: #007777;
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+        }
+        .pdf-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .pdf-modal-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 <body>
@@ -124,17 +173,36 @@
         <button class="btn btn-download" onclick="descargarPDF()">⬇️ DESCARGAR PDF</button>
     </div>
 
+    <!-- Modal que muestra el PDF embebido, sin disparar descarga -->
+    <div class="pdf-modal-overlay" id="pdfModal">
+        <div class="pdf-modal-box">
+            <div class="pdf-modal-header">
+                <span>Ficha de Mascota</span>
+                <button class="pdf-modal-close" onclick="cerrarModalPDF()">&times;</button>
+            </div>
+            <iframe class="pdf-modal-iframe" id="pdfFrame"></iframe>
+        </div>
+    </div>
+
 <script>
+    // Limpia valores: si viene vacío, null, "undefined" o solo espacios, usa el fallback
+    function limpiar(valor, fallback) {
+        if (valor === null || valor === undefined) return fallback;
+        const v = String(valor).trim();
+        if (v === '' || v === 'null' || v === 'undefined') return fallback;
+        return v;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const pet = {
-        n:   params.get('n')   || '---',
-        e:   params.get('e')   || '---',
-        r:   params.get('r')   || '---',
-        f:   params.get('f')   || '---',
-        ed:  params.get('ed')  || 'N/A',
-        d:   params.get('d')   || '---',
-        t:   params.get('t')   || '---',
-        id:  params.get('id')  || '---',
+        n:   limpiar(params.get('n'),  '---'),
+        e:   limpiar(params.get('e'),  '---'),
+        r:   limpiar(params.get('r'),  '---'),
+        f:   limpiar(params.get('f'),  '---'),
+        ed:  limpiar(params.get('ed'), 'N/A'),
+        d:   limpiar(params.get('d'),  '---'),
+        t:   limpiar(params.get('t'),  '---'),
+        id:  limpiar(params.get('id'), '---'),
         img: params.get('img') || null
     };
 
@@ -210,7 +278,8 @@
             doc.text(label, 20, y);
             doc.setTextColor(26, 26, 58);
             doc.setFont('helvetica', 'bold');
-            doc.text(value, 100, y);
+            // Fuerza string seguro: evita el glifo raro cuando el valor viene vacío/null
+            doc.text(String(value || '---'), 100, y);
         });
 
         doc.setFillColor(0, 163, 163);
@@ -230,7 +299,7 @@
             doc.text(label, 20, y);
             doc.setTextColor(26, 26, 58);
             doc.setFont('helvetica', 'bold');
-            doc.text(value, 100, y);
+            doc.text(String(value || '---'), 100, y);
         });
 
         doc.setFillColor(224, 247, 250);
@@ -244,21 +313,30 @@
         return doc;
     }
 
-    // Ver PDF: abre en nueva pestaña en desktop, descarga en móvil
+    let pdfBlobUrl = null;
+
+    // Ver PDF: lo muestra DENTRO de un modal embebido (iframe), nunca descarga
     function verPDF() {
         const doc = generarPDF();
         const blob = doc.output('blob');
-        const url = URL.createObjectURL(blob);
-        // Intenta abrir en nueva pestaña
-        const newTab = window.open(url, '_blank');
-        // Si el navegador móvil bloquea la pestaña, descarga
-        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            a.click();
-        }
+
+        // Libera la URL anterior si existía, para no acumular memoria
+        if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+        pdfBlobUrl = URL.createObjectURL(blob);
+
+        document.getElementById('pdfFrame').src = pdfBlobUrl;
+        document.getElementById('pdfModal').classList.add('active');
     }
+
+    function cerrarModalPDF() {
+        document.getElementById('pdfModal').classList.remove('active');
+        document.getElementById('pdfFrame').src = '';
+    }
+
+    // Cierra el modal si se toca fuera del recuadro
+    document.getElementById('pdfModal').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalPDF();
+    });
 
     // Descargar PDF directamente
     function descargarPDF() {
