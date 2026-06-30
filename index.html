@@ -5,44 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PawID - Ficha de Mascota</title>
     <style>
-        /* Diseño idéntico al de tu PDF */
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; display: flex; justify-content: center; }
-        .card { 
-            background: white; width: 100%; max-width: 450px; padding: 25px; 
-            border-radius: 12px; border: 2px solid #008080; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        /* CSS REPLICANDO TU DISEÑO DE FLUTTER */
+        body { 
+            font-family: sans-serif; 
+            background-color: #F5F5F0; /* Tu color _beige */
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
         }
-        .header { background: #008080; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
-        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-        .row b { color: #333; }
-        .btn { 
-            width: 100%; background: #008080; color: white; padding: 15px; 
-            border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 20px; 
+        .main-card {
+            background: #FEFEFE; /* Tu color _white */
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            border-radius: 14px;
+            border: 2.5px solid #00A3A3; /* Tu color _border */
+        }
+        .header {
+            background-color: #007777; /* Tu color _primary */
+            padding: 20px;
+            border-radius: 10px;
+            color: #FEFEFE;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title {
+            background-color: #00A3A3; /* Tu color _primaryLight */
+            color: white;
+            padding: 10px;
+            margin: 15px 0 0 0;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .section-content {
+            background-color: #F5F5F0; /* Tu color _beige */
+            padding: 15px;
+            border: 1px solid #00A3A3;
+            border-radius: 0 0 6px 6px;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .label { color: #666666; } /* Tu color _textLight */
+        .value { color: #1A1A3A; font-weight: bold; } /* Tu color _textDark */
+        
+        .btn {
+            width: 100%;
+            background: #007777;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div id="content" class="card">
+<div class="main-card" id="content">
     </div>
 
 <script>
     const params = new URLSearchParams(window.location.search);
     const pet = {
-        nombre: params.get('n') || '---',
-        especie: params.get('e') || '---',
-        raza: params.get('r') || '---',
-        dueno: params.get('d') || '---',
-        telefono: params.get('t') || '---'
+        n: params.get('n') || '---',
+        e: params.get('e') || '---',
+        r: params.get('r') || '---',
+        f: params.get('f') || '---',
+        ed: params.get('ed') || '---',
+        d: params.get('d') || '---',
+        t: params.get('t') || '---'
     };
 
     document.getElementById('content').innerHTML = `
-        <div class="header"><h2>PawID</h2><p>Ficha de Mascota</p></div>
-        <div class="row"><span>Nombre:</span><b>${pet.nombre}</b></div>
-        <div class="row"><span>Especie:</span><b>${pet.especie}</b></div>
-        <div class="row"><span>Raza:</span><b>${pet.raza}</b></div>
-        <div class="row"><span>Dueño:</span><b>${pet.dueno}</b></div>
-        <div class="row"><span>Teléfono:</span><b>${pet.telefono}</b></div>
-        <button class="btn" onclick="window.print()">🖨️ Descargar / Imprimir Ficha</button>
+        <div class="header">
+            <div>
+                <h2>PawID</h2>
+                <small style="color: #E0F7FA;">Ficha de Mascota</small>
+            </div>
+            <div style="width: 50px; height: 50px; background: #E0F7FA; border-radius: 50%; color: #007777; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                ${pet.n[0]}
+            </div>
+        </div>
+
+        <div class="section-title">Datos de la Mascota</div>
+        <div class="section-content">
+            <div class="row"><span class="label">Nombre</span><span class="value">${pet.n}</span></div>
+            <div class="row"><span class="label">Especie</span><span class="value">${pet.e}</span></div>
+            <div class="row"><span class="label">Raza</span><span class="value">${pet.r}</span></div>
+            <div class="row"><span class="label">Nacimiento</span><span class="value">${pet.f}</span></div>
+            <div class="row"><span class="label">Edad</span><span class="value">${pet.ed}</span></div>
+        </div>
+
+        <div class="section-title">Datos del Dueño</div>
+        <div class="section-content">
+            <div class="row"><span class="label">Nombre</span><span class="value">${pet.d}</span></div>
+            <div class="row"><span class="label">Teléfono</span><span class="value">${pet.t}</span></div>
+        </div>
+
+        <button class="btn" onclick="window.print()">📥 Imprimir/Guardar PDF</button>
     `;
 </script>
 </body>
