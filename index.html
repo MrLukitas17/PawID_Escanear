@@ -167,83 +167,171 @@
         return parseFloat(n.toFixed(2)) + ' kg';
     }
 
+    // ── Configuración pública de Supabase ─────────────────────────────────
+    // La clave anon es pública por diseño: solo permite ejecutar la función
+    // `ficha_publica`, que devuelve los datos públicos de la mascota.
+    const SUPABASE_URL = 'https://ujsokaxksqwqojvctvtx.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqc29rYXhrc3F3cW9qdmN0dnR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDczMjYsImV4cCI6MjA5NjUyMzMyNn0.-Z2vF2M6KuBgv0xikU603xgJV2SegB3P0a8CNlTL9IM';
+
     const params = new URLSearchParams(window.location.search);
-    const imgParam = params.get('img');
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let pet = null;
 
-    const pet = {
-        n:   limpiar(params.get('n'),  '---'),
-        e:   limpiar(params.get('e'),  '---'),
-        r:   limpiar(params.get('r'),  '---'),
-        f:   limpiar(params.get('f'),  '---'),
-        ed:  limpiar(params.get('ed'), 'N/A'),
-        d:   limpiar(params.get('d'),  '---'),
-        t:   limpiar(params.get('t'),  '---'),
-        id:  limpiar(params.get('id'), '---'),
-        // Nuevos datos que envía la app:
-        peso: pesoLegible(limpiar(params.get('p'), '')),
-        v:    limpiar(params.get('v'), 'No informado'),
-        ds:   limpiar(params.get('ds'), '').slice(0, 300),
-        // La foto llega como URL pública de Supabase Storage ('img').
-        // Solo se aceptan URLs https.
-        img: imgParam && /^https:\/\//i.test(imgParam) ? imgParam : null
-    };
+    // "2020-05-14" -> "14/05/2020"
+    function fechaLegible(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+        return m ? `${m[3]}/${m[2]}/${m[1]}` : '---';
+    }
 
-    const inicial = Array.from(pet.n)[0].toUpperCase();
+    // Edad en años a partir de "yyyy-MM-dd"
+    function edad(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+        if (!m) return 'N/A';
+        const hoy = new Date();
+        let a = hoy.getFullYear() - +m[1];
+        if (hoy.getMonth() + 1 < +m[2] || (hoy.getMonth() + 1 === +m[2] && hoy.getDate() < +m[3])) a--;
+        return a < 0 ? 'N/A' : `${a} año${a === 1 ? '' : 's'}`;
+    }
 
-    const descHtml = pet.ds
-        ? `<div class="desc">
-               <span class="label">Descripción</span>
-               <p class="desc-text">${esc(pet.ds)}</p>
-           </div>`
-        : '';
+    function soloHttps(url) {
+        return url && /^https:\/\//i.test(url) ? url : null;
+    }
 
-    document.getElementById('content').innerHTML = `
-        <div class="header">
-            <div><h2>PawID</h2><small>Ficha de Mascota</small></div>
-            <div id="headerRight"></div>
-        </div>
-        <div class="section-title">Datos de la Mascota</div>
-        <div class="section-content">
-            <div class="row"><span class="label">Nombre</span><span class="value">${esc(pet.n)}</span></div>
-            <div class="row"><span class="label">Especie</span><span class="value">${esc(pet.e)}</span></div>
-            <div class="row"><span class="label">Raza</span><span class="value">${esc(pet.r)}</span></div>
-            <div class="row"><span class="label">Fecha de nacimiento</span><span class="value">${esc(pet.f)}</span></div>
-            <div class="row"><span class="label">Edad</span><span class="value">${esc(pet.ed)}</span></div>
-            <div class="row"><span class="label">Peso</span><span class="value">${esc(pet.peso)}</span></div>
-            <div class="row"><span class="label">Vacunas al día</span><span class="value">${esc(pet.v)}</span></div>
-            ${descHtml}
-        </div>
-        <div class="section-title">Datos del Dueño</div>
-        <div class="section-content">
-            <div class="row"><span class="label">Nombre</span><span class="value">${esc(pet.d)}</span></div>
-            <div class="row"><span class="label">Teléfono</span><span class="value">${esc(pet.t)}</span></div>
-        </div>
-        <div class="card-footer">
-            <span>ID: ${esc(pet.id)}</span>
-            <span>Generado por PawID</span>
-        </div>
-    `;
+    // Pide a Supabase solo los datos públicos de la mascota (por UUID).
+    async function cargarFicha(id) {
+        const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/ficha_publica`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ p_id: id })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const filas = await resp.json();
+        if (!filas.length) return null;
+        const m = filas[0];
+        return {
+            n:    limpiar(m.nombre, '---'),
+            e:    limpiar(m.especie, '---'),
+            r:    limpiar(m.raza, '---'),
+            f:    fechaLegible(m.fecha_nacimiento),
+            ed:   edad(m.fecha_nacimiento),
+            d:    limpiar(m.dueno_nombre, '---'),
+            t:    limpiar(m.dueno_telefono, '---'),
+            id:   m.id,
+            peso: pesoLegible(limpiar(m.peso_kg, '')),
+            v:    limpiar(m.vacunas, 'No informado'),
+            ds:   limpiar(m.descripcion, '').slice(0, 300),
+            img:  soloHttps(m.foto_path)
+        };
+    }
 
-    // Foto de la mascota (o su inicial si no hay foto o no carga)
-    (function mostrarFoto() {
-        const cont = document.getElementById('headerRight');
+    // QR antiguos (antes de noviembre 2026) traían los datos en la URL.
+    function fichaDesdeUrl() {
+        return {
+            n:   limpiar(params.get('n'),  '---'),
+            e:   limpiar(params.get('e'),  '---'),
+            r:   limpiar(params.get('r'),  '---'),
+            f:   limpiar(params.get('f'),  '---'),
+            ed:  limpiar(params.get('ed'), 'N/A'),
+            d:   limpiar(params.get('d'),  '---'),
+            t:   limpiar(params.get('t'),  '---'),
+            id:  limpiar(params.get('id'), '---'),
+            peso: pesoLegible(limpiar(params.get('p'), '')),
+            v:    limpiar(params.get('v'), 'No informado'),
+            ds:   limpiar(params.get('ds'), '').slice(0, 300),
+            img:  soloHttps(params.get('img'))
+        };
+    }
 
-        function mostrarInicial() {
-            cont.innerHTML = '';
-            const d = document.createElement('div');
-            d.className = 'pet-initial';
-            d.textContent = inicial;
-            cont.appendChild(d);
+    function mostrarMensaje(titulo, texto) {
+        document.getElementById('content').innerHTML = `
+            <div class="header"><div><h2>PawID</h2><small>${esc(titulo)}</small></div></div>
+            <div class="section-content"><p class="desc-text">${esc(texto)}</p></div>`;
+        document.getElementById('downloadBtn').style.display = 'none';
+    }
+
+    function mostrarFicha() {
+        const inicial = Array.from(pet.n)[0].toUpperCase();
+
+        const descHtml = pet.ds
+            ? `<div class="desc">
+                   <span class="label">Descripción</span>
+                   <p class="desc-text">${esc(pet.ds)}</p>
+               </div>`
+            : '';
+
+        document.getElementById('content').innerHTML = `
+            <div class="header">
+                <div><h2>PawID</h2><small>Ficha de Mascota</small></div>
+                <div id="headerRight"></div>
+            </div>
+            <div class="section-title">Datos de la Mascota</div>
+            <div class="section-content">
+                <div class="row"><span class="label">Nombre</span><span class="value">${esc(pet.n)}</span></div>
+                <div class="row"><span class="label">Especie</span><span class="value">${esc(pet.e)}</span></div>
+                <div class="row"><span class="label">Raza</span><span class="value">${esc(pet.r)}</span></div>
+                <div class="row"><span class="label">Fecha de nacimiento</span><span class="value">${esc(pet.f)}</span></div>
+                <div class="row"><span class="label">Edad</span><span class="value">${esc(pet.ed)}</span></div>
+                <div class="row"><span class="label">Peso</span><span class="value">${esc(pet.peso)}</span></div>
+                <div class="row"><span class="label">Vacunas al día</span><span class="value">${esc(pet.v)}</span></div>
+                ${descHtml}
+            </div>
+            <div class="section-title">Datos del Dueño</div>
+            <div class="section-content">
+                <div class="row"><span class="label">Nombre</span><span class="value">${esc(pet.d)}</span></div>
+                <div class="row"><span class="label">Teléfono</span><span class="value">${esc(pet.t)}</span></div>
+            </div>
+            <div class="card-footer">
+                <span>ID: ${esc(pet.id)}</span>
+                <span>Generado por PawID</span>
+            </div>
+        `;
+
+        // Foto de la mascota (o su inicial si no hay foto o no carga)
+        (function mostrarFoto() {
+            const cont = document.getElementById('headerRight');
+
+            function mostrarInicial() {
+                cont.innerHTML = '';
+                const d = document.createElement('div');
+                d.className = 'pet-initial';
+                d.textContent = inicial;
+                cont.appendChild(d);
+            }
+
+            if (!pet.img) { mostrarInicial(); return; }
+
+            const im = new Image();
+            im.className = 'pet-img';
+            im.alt = pet.n;
+            im.onerror = mostrarInicial;
+            im.src = pet.img;
+            cont.appendChild(im);
+        })();
+    }
+
+    (async function iniciar() {
+        const id = params.get('id');
+        try {
+            if (params.has('n')) {
+                pet = fichaDesdeUrl();
+            } else if (id && UUID_RE.test(id)) {
+                mostrarMensaje('Cargando…', 'Buscando la ficha de la mascota.');
+                pet = await cargarFicha(id);
+            }
+        } catch (err) {
+            mostrarMensaje('Sin conexión', 'No se pudo cargar la ficha. Revisa tu conexión e intenta de nuevo.');
+            return;
         }
-
-        if (!pet.img) { mostrarInicial(); return; }
-
-        const im = new Image();
-        im.className = 'pet-img';
-        im.alt = pet.n;
-        im.onerror = mostrarInicial;
-        im.src = pet.img;
-        cont.appendChild(im);
+        if (!pet) {
+            mostrarMensaje('Ficha no encontrada', 'Este código QR no corresponde a una mascota registrada en PawID.');
+            return;
+        }
+        document.getElementById('downloadBtn').style.display = '';
+        mostrarFicha();
     })();
 
     // Recorta una imagen (URL o data URL) en un círculo, devuelve una
@@ -421,6 +509,7 @@
 
     // Descargar PDF directamente
     async function descargarPDF() {
+        if (!pet) return;
         const btn = document.getElementById('downloadBtn');
         const originalText = btn.innerHTML;
         btn.disabled = true;
