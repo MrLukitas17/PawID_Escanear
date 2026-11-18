@@ -1,4 +1,4 @@
-// Configuración pública de PawID (la usan todas las páginas del sitio).
+// Configuración pública de la Vista Pública de Emergencia de PawID.
 // La clave anon de Supabase es pública por diseño: lo que se puede leer o
 // modificar lo controlan las políticas RLS y las funciones del backend.
 window.PAWID = {
