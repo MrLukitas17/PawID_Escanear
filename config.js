@@ -6,7 +6,7 @@ window.PAWID = {
     SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqc29rYXhrc3F3cW9qdmN0dnR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDczMjYsImV4cCI6MjA5NjUyMzMyNn0.-Z2vF2M6KuBgv0xikU603xgJV2SegB3P0a8CNlTL9IM',
     // Dirección definitiva del sitio en Vercel (sin "/" al final). Mientras
     // esté vacía, GitHub Pages no redirige.
-    VERCEL_URL: ''
+    VERCEL_URL: 'https://pawid-qr.vercel.app'
 };
 
 // Si la página se abre desde GitHub Pages (QR antiguos), se redirige a
