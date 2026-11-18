@@ -175,19 +175,32 @@
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     let pet = null;
 
-    // "2020-05-14" -> "14/05/2020"
-    function fechaLegible(iso) {
-        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
-        return m ? `${m[3]}/${m[2]}/${m[1]}` : '---';
+    // Acepta "2020-05-14" (actual) o "14/05/2020" (datos antiguos).
+    // Devuelve [año, mes, día] o null.
+    function partesFecha(valor) {
+        const t = (valor || '').trim();
+        let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(t);
+        if (m) return [+m[1], +m[2], +m[3]];
+        m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t);
+        if (m) return [+m[3], +m[2], +m[1]];
+        return null;
     }
 
-    // Edad en años a partir de "yyyy-MM-dd"
-    function edad(iso) {
-        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
-        if (!m) return 'N/A';
+    // -> "14/05/2020"
+    function fechaLegible(valor) {
+        const p = partesFecha(valor);
+        if (!p) return '---';
+        const dd = String(p[2]).padStart(2, '0'), mm = String(p[1]).padStart(2, '0');
+        return `${dd}/${mm}/${p[0]}`;
+    }
+
+    // Edad en años
+    function edad(valor) {
+        const p = partesFecha(valor);
+        if (!p) return 'N/A';
         const hoy = new Date();
-        let a = hoy.getFullYear() - +m[1];
-        if (hoy.getMonth() + 1 < +m[2] || (hoy.getMonth() + 1 === +m[2] && hoy.getDate() < +m[3])) a--;
+        let a = hoy.getFullYear() - p[0];
+        if (hoy.getMonth() + 1 < p[1] || (hoy.getMonth() + 1 === p[1] && hoy.getDate() < p[2])) a--;
         return a < 0 ? 'N/A' : `${a} año${a === 1 ? '' : 's'}`;
     }
 
