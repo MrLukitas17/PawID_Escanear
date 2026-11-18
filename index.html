@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PawID - Ficha de Mascota</title>
+    <script src="config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -167,11 +168,8 @@
         return parseFloat(n.toFixed(2)) + ' kg';
     }
 
-    // ── Configuración pública de Supabase ─────────────────────────────────
-    // La clave anon es pública por diseño: solo permite ejecutar la función
-    // `ficha_publica`, que devuelve los datos públicos de la mascota.
-    const SUPABASE_URL = 'https://ujsokaxksqwqojvctvtx.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqc29rYXhrc3F3cW9qdmN0dnR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDczMjYsImV4cCI6MjA5NjUyMzMyNn0.-Z2vF2M6KuBgv0xikU603xgJV2SegB3P0a8CNlTL9IM';
+    const SUPABASE_URL = window.PAWID.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = window.PAWID.SUPABASE_ANON_KEY;
 
     const params = new URLSearchParams(window.location.search);
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
